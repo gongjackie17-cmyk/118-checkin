@@ -105,6 +105,46 @@ console.log('\n[6] 姓名清洗 clean');
 eq('去空格', CC.clean(' 张 三 '), '张三');
 eq('空值', CC.clean(null), '');
 
+console.log('\n[7] 页面渲染 renderHome（真实模板，不白屏检查）');
+const cfg2 = {
+  org:'118 创造营', title:'每日打卡', surveyUrl:'https://www.wjx.cn/vm/test.aspx',
+  dataUrl:'https://x/data', proxy:'',
+  members:'张三\n李四\n周八', types:'读书\n学习经典一课', manual:''
+};
+const rows2 = [
+  { name:'张三', type:'读书', date:T, note:'读了 32 页' },
+  { name:'李四', type:'学习经典一课', date:T, note:'' }
+];
+const home = CC.renderHome(cfg2, { ok:true, rows:rows2 });
+eq('渲染出组织名', home.indexOf('118 创造营') >= 0, true);
+eq('渲染出今日进度 2/3', home.indexOf('2</b>/ 3') >= 0 || home.indexOf('/ 3 人') >= 0, true);
+eq('已打卡区块存在', home.indexOf('已打卡') >= 0, true);
+eq('未打卡区块存在', home.indexOf('未打卡') >= 0, true);
+eq('未打卡里出现周八', home.indexOf('周八') >= 0, true);
+eq('打卡按钮指向问卷', home.indexOf('wjx.cn/vm/test.aspx') >= 0, true);
+eq('近7天图表存在', home.indexOf('近 7 天打卡人数') >= 0, true);
+eq('张三心得被渲染', home.indexOf('读了 32 页') >= 0, true);
+
+console.log('\n[8] 渲染异常输入不崩');
+let crashed = null;
+try {
+  CC.renderHome({ org:'', title:'', surveyUrl:'', dataUrl:'', proxy:'', members:'', types:'', manual:'' },
+                { ok:false, err:'读取超时', rows:[] });
+} catch (e) { crashed = e.message; }
+eq('空配置 + 失败数据不抛错', crashed, null);
+
+console.log('\n[9] XSS 转义');
+eq('尖括号被转义', CC.esc('<script>alert(1)</script>'), '&lt;script&gt;alert(1)&lt;/script&gt;');
+const evil = CC.renderHome(cfg2, { ok:true, rows:[{ name:'<img src=x onerror=alert(1)>', type:'读书', date:T, note:'' }] });
+eq('恶意名字不产出可执行标签', evil.indexOf('<img src=x') >= 0, false);
+
+console.log('\n[10] 设置页渲染 renderSetup');
+const setup = CC.renderSetup(cfg2);
+eq('含问卷链接输入框', setup.indexOf('id="f_survey"') >= 0, true);
+eq('含公开数据地址输入框', setup.indexOf('id="f_data"') >= 0, true);
+eq('含成员名单输入框', setup.indexOf('id="f_members"') >= 0, true);
+eq('含保存按钮', setup.indexOf('id="save"') >= 0, true);
+
 console.log('\n----------------------------------------');
 console.log(fail === 0 ? `全部通过 (${pass} 项)` : `${pass} 通过 / ${fail} 失败`);
 process.exit(fail === 0 ? 0 : 1);
