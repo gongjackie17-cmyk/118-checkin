@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>每日打卡</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:#F5F4F9;color:#201E2E;font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:520px;margin:0 auto;padding:0 14px 96px}
+
+/* ---------- header ---------- */
+.hd{
+  background:#534AB7;color:#fff;padding:26px 20px 30px;
+  border-radius:0 0 22px 22px;margin:0 -14px 0;
+  padding-left:34px;padding-right:34px;
+}
+.hd .org{font-size:13px;opacity:.82;margin:0}
+.hd .ttl{font-size:23px;font-weight:600;margin:4px 0 0;letter-spacing:.5px}
+.hd .date{font-size:13px;opacity:.75;margin:7px 0 0}
+.hd .setup{
+  display:inline-block;margin-top:14px;font-size:13px;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);
+  border-radius:8px;padding:6px 13px;color:#fff;text-decoration:none;
+}
+.demo-banner{
+  background:#FAEEDA;color:#854F0B;font-size:13px;
+  padding:10px 14px;border-radius:10px;margin:-14px 0 16px;
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
+.demo-banner a{color:#854F0B;font-weight:500;text-decoration:none;white-space:nowrap}
+
+/* ---------- cards ---------- */
+.card{background:#fff;border-radius:14px;padding:16px 16px 6px;margin-bottom:14px}
+.card.pad{padding:16px}
+.prog-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.prog-top .lbl{font-size:14px;color:#5F5E5A}
+.prog-top .num{font-size:14px;color:#5F5E5A}
+.prog-top .num b{font-size:20px;color:#201E2E;font-weight:600;margin-right:1px}
+.bar{height:7px;background:#EBE9F0;border-radius:4px;overflow:hidden}
+.bar i{display:block;height:7px;background:#534AB7;border-radius:4px;transition:width .5s}
+.hint{font-size:12px;color:#8A8894;margin:9px 0 14px}
+
+/* ---------- week chart ---------- */
+.week{display:flex;gap:6px;align-items:flex-end;height:56px;margin:4px 0 10px}
+.week .d{flex:1;display:flex;flex-direction:column;align-items:center;gap:5px;height:100%;justify-content:flex-end}
+.week .b{width:100%;background:#CECBF6;border-radius:4px;min-height:3px;transition:height .5s}
+.week .b.zero{background:#EBE9F0}
+.week .t{font-size:11px;color:#8A8894}
+
+/* ---------- section ---------- */
+.sec{font-size:13px;color:#8A8894;margin:20px 0 4px;padding:0 3px;display:flex;justify-content:space-between}
+.row{display:flex;align-items:center;gap:10px;padding:9px 0}
+.row+.row{border-top:1px solid #F2F1F6}
+.av{
+  width:32px;height:32px;border-radius:50%;flex:none;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:500;
+}
+.av.on{background:#E1F5EE;color:#0F6E56}
+.av.off{background:#F1EFE8;color:#A8A69F}
+.nm{flex:1;min-width:0;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm.off{color:#A8A69F}
+.tag{font-size:12px;border-radius:7px;padding:2px 8px;flex:none;white-space:nowrap}
+.tag.y{background:#E1F5EE;color:#0F6E56}
+.tag.w{background:#FAEEDA;color:#854F0B}
+.tag.g{background:#F1EFE8;color:#8A8894}
+.sub{font-size:12px;color:#8A8894;flex:none}
+
+/* ---------- filter ---------- */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 12px;-webkit-overflow-scrolling:touch}
+.chip{
+  font-size:13px;padding:5px 12px;border-radius:20px;flex:none;
+  background:#F1EFE8;color:#5F5E5A;border:none;
+}
+.chip.act{background:#534AB7;color:#fff}
+
+/* ---------- buttons ---------- */
+.foot{
+  position:fixed;left:0;right:0;bottom:0;z-index:9;
+  background:linear-gradient(180deg,rgba(245,244,249,0),rgba(245,244,249,.96) 34%);
+  padding:16px 14px calc(18px + env(safe-area-inset-bottom));
+}
+.foot .in{max-width:520px;margin:0 auto}
+.btn{
+  display:block;width:100%;text-align:center;text-decoration:none;
+  background:#534AB7;color:#fff;font-size:16px;font-weight:500;
+  padding:13px;border-radius:12px;border:none;
+}
+.btn.ghost{
+  background:#fff;color:#534AB7;border:1px solid #CECBF6;
+  font-size:14px;padding:11px;margin-top:9px;
+}
+.btn:disabled{opacity:.45}
+
+/* ---------- setup ---------- */
+.st-wrap{max-width:520px;margin:0 auto;padding:20px 16px 60px}
+.st-h{font-size:20px;font-weight:600;margin:0 0 4px}
+.st-s{font-size:13px;color:#8A8894;margin:0 0 20px}
+.fld{margin-bottom:16px}
+.fld label{display:block;font-size:13px;color:#5F5E5A;margin-bottom:6px}
+.fld label b{color:#D85A30}
+.fld input,.fld textarea,.fld select{
+  width:100%;font-size:15px;font-family:inherit;
+  padding:11px 12px;border:1px solid #DFDDE7;border-radius:10px;
+  background:#fff;color:#201E2E;outline:none;
+}
+.fld input:focus,.fld textarea:focus{border-color:#534AB7}
+.fld textarea{min-height:96px;resize:vertical;line-height:1.6}
+.fld .tip{font-size:12px;color:#8A8894;margin-top:5px;line-height:1.5}
+.st-card{background:#fff;border-radius:14px;padding:18px 16px;margin-bottom:14px}
+.st-card h3{font-size:15px;font-weight:600;margin:0 0 14px}
+.share{
+  background:#E1F5EE;border-radius:12px;padding:14px;margin-bottom:14px;
+  font-size:13px;color:#0F6E56;
+}
+.share .u{
+  display:block;background:#fff;border-radius:8px;padding:9px 10px;margin-top:9px;
+  font-size:12px;color:#3B6D11;word-break:break-all;font-family:ui-monospace,Menlo,monospace;
+}
+.err{background:#FCEBEB;color:#A32D2D;border-radius:10px;padding:11px 13px;font-size:13px;margin-bottom:14px}
+.ok{background:#E1F5EE;color:#0F6E56;border-radius:10px;padding:11px 13px;font-size:13px;margin-bottom:14px}
+.hidden{display:none}
+.center{text-align:center;padding:40px 20px;color:#8A8894;font-size:14px}
+.spin{width:22px;height:22px;border:2px solid #DFDDE7;border-top-color:#534AB7;border-radius:50%;margin:0 auto 12px;animation:r .7s linear infinite}
+@keyframes r{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script>
+(function(){
+'use strict';
+
+var LS_CFG  = 'cy118_cfg_v1';
+var LS_JSON = 'cy118_manual_json_v1';
+
+/* ================= 配置编解码 ================= */
+function encCfg(o){
+  var json = JSON.stringify(o);
+  var bytes = new TextEncoder().encode(json);
+  var bin = '';
+  for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function decCfg(s){
+  s = s.replace(/-/g,'+').replace(/_/g,'/');
+  while (s.length % 4) s += '=';
+  var bin = atob(s);
+  var bytes = new Uint8Array(bin.length);
+  for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return JSON.parse(new TextDecoder().decode(bytes));
+}
+
+var DEFAULT = {
+  org:'118 创造营', title:'每日打卡',
+  surveyUrl:'', dataUrl:'', proxy:'',
+  members:'', types:'读书\n学习经典一课',
+  manual:''
+};
+
+function loadCfg(){
+  var c = null;
+  try{
+    var h = location.hash || '';
+    var m = h.match(/[#&]c=([A-Za-z0-9\-_]+)/);
+    if (m) c = decCfg(m[1]);
+  }catch(e){ c = null; }
+  if (!c){
+    try{ c = JSON.parse(localStorage.getItem(LS_CFG) || 'null'); }catch(e){ c = null; }
+  }
+  var out = {};
+  for (var k in DEFAULT) out[k] = (c && c[k] !== undefined) ? c[k] : DEFAULT[k];
+  return out;
+}
+function saveCfg(c){ try{ localStorage.setItem(LS_CFG, JSON.stringify(c)); }catch(e){} }
+
+/* ================= 工具 ================= */
+function pad(n){ return n < 10 ? '0'+n : ''+n; }
+function fmtDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function today(){ return fmtDate(new Date()); }
+function normDate(s){
+  if (!s) return '';
+  s = String(s).trim().slice(0,10).replace(/[\/.]/g,'-');
+  var m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (!m) return '';
+  return m[1]+'-'+pad(+m[2])+'-'+pad(+m[3]);
+}
+function clean(s){ return String(s==null?'':s).replace(/\s+/g,'').trim(); }
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function daysAgo(n){ var d = new Date(); d.setDate(d.getDate()-n); return fmtDate(d); }
+
+/* ================= 数据解析 ================= */
+var NAME_KEYS = ['name','姓名','名字','成员','昵称','username'];
+var TYPE_KEYS = ['type','类型','打卡类型','项目','类别','category'];
+var DATE_KEYS = ['date','日期','打卡日期','时间','submittime','提交时间','datetime'];
+var NOTE_KEYS = ['note','心得','内容','备注','留言','感想','记录','text'];
+
+function pick(rec, keys){
+  var lk = {};
+  for (var k in rec) lk[String(k).toLowerCase().replace(/\s/g,'')] = rec[k];
+  for (var i = 0; i < keys.length; i++){
+    var k1 = keys[i].toLowerCase();
+    if (rec[k1] !== undefined && String(rec[k1]).trim() !== '') return String(rec[k1]).trim();
+    if (lk[k1] !== undefined && String(lk[k1]).trim() !== '') return String(lk[k1]).trim();
+  }
+  return '';
+}
+
+function parseRows(raw){
+  var arr = raw;
+  if (typeof raw === 'string'){
+    try{ arr = JSON.parse(raw); }catch(e){ return []; }
+  }
+  if (!Array.isArray(arr)){
+    if (arr && Array.isArray(arr.data)) arr = arr.data;
+    else if (arr && Array.isArray(arr.list)) arr = arr.list;
+    else if (arr && Array.isArray(arr.result)) arr = arr.result;
+    else return [];
+  }
+  var out = [];
+  for (var i = 0; i < arr.length; i++){
+    var r = arr[i];
+    if (!r || typeof r !== 'object') continue;
+    var nm = pick(r, NAME_KEYS);
+    if (!nm) continue;
+    out.push({
+      name: nm,
+      type: pick(r, TYPE_KEYS),
+      date: normDate(pick(r, DATE_KEYS)),
+      note: pick(r, NOTE_KEYS)
+    });
+  }
+  return out;
+}
+
+/* ================= 统计 ================= */
+function build(rows){
+  var byName = {};
+  rows.forEach(function(r){
+    var k = clean(r.name);
+    if (!k) return;
+    if (!byName[k]) byName[k] = { name: r.name, dates:{}, types:{}, last:'', notes:[] };
+    var o = byName[k];
+    if (r.date){
+      o.dates[r.date] = 1;
+      if (r.date > o.last){ o.last = r.date; o.notes = r.note ? [r.note] : []; }
+      else if (r.date === o.last && r.note) o.notes.push(r.note);
+    }
+    if (r.type) o.types[r.type] = (o.types[r.type] || 0) + 1;
+  });
+
+  var t = today();
+  for (var k in byName){
+    var o = byName[k];
+    o.done = !!o.dates[t];
+    o.total = Object.keys(o.dates).length;
+    o.streak = streak(o.dates);
+    o.todayTypes = [];
+    rows.forEach(function(r){
+      if (clean(r.name) === k && r.date === t && r.type && o.todayTypes.indexOf(r.type) < 0) o.todayTypes.push(r.type);
+    });
+    o.note = o.notes.length ? o.notes[o.notes.length-1] : '';
+  }
+  return byName;
+}
+
+function streak(dates){
+  var t = today();
+  var c = new Date();
+  if (!dates[t]) c.setDate(c.getDate()-1);
+  var n = 0;
+  while (dates[fmtDate(c)]){ n++; c.setDate(c.getDate()-1); }
+  return n;
+}
+
+/* ================= 取数 ================= */
+function fetchData(cfg, cb){
+  var manual = cfg.manual || localStorage.getItem(LS_JSON) || '';
+  if (manual && !cfg.dataUrl){
+    cb({ ok:true, rows:parseRows(manual), src:'manual' });
+    return;
+  }
+  if (!cfg.dataUrl){
+    cb({ ok:false, err:'还没配置公开数据地址', src:'none' });
+    return;
+  }
+  var url = cfg.dataUrl;
+  if (cfg.proxy) url = cfg.proxy + encodeURIComponent(cfg.dataUrl);
+  var done = false;
+  var timer = setTimeout(function(){
+    if (done) return; done = true;
+    if (manual){
+      cb({ ok:true, rows:parseRows(manual), src:'manual', warn:'自动读取超时，已使用上次手动数据' });
+    } else {
+      cb({ ok:false, err:'读取超时', src:'net' });
+    }
+  }, 12000);
+
+  fetch(url, { cache:'no-store' })
+    .then(function(r){
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.text();
+    })
+    .then(function(txt){
+      var rows = parseRows(txt);
+      if (done) return; done = true; clearTimeout(timer);
+      if (!rows.length){
+        if (manual) cb({ ok:true, rows:parseRows(manual), src:'manual', warn:'接口返回空，已使用上次手动数据' });
+        else cb({ ok:false, err:'接口返回了数据但没识别到姓名字段，请到设置页检查键名映射', src:'net' });
+        return;
+      }
+      try{ localStorage.setItem(LS_JSON, txt); }catch(e){}
+      cb({ ok:true, rows:rows, src:'net' });
+    })
+    .catch(function(e){
+      if (done) return; done = true; clearTimeout(timer);
+      if (manual) cb({ ok:true, rows:parseRows(manual), src:'manual', warn:'自动读取失败（'+esc(e.message)+'），已使用上次手动数据' });
+      else cb({ ok:false, err:'读取失败：' + e.message, src:'net' });
+    });
+}
+
+/* ================= 渲染：打卡页 ================= */
+var state = { filter:'全部' };
+
+function renderHome(cfg, data){
+  var rows = data.rows || [];
+  var map = build(rows);
+  var members = (cfg.members || '').split('\n').map(clean).filter(Boolean);
+
+  var known = {}, extra = [];
+  members.forEach(function(m){ known[m] = 1; });
+  Object.keys(map).forEach(function(k){
+    if (!known[k]) extra.push(k);
+  });
+
+  var t = today();
+  var doneArr = [], undoneArr = [];
+  members.forEach(function(m){
+    var o = map[m];
+    if (o && o.done) doneArr.push(o); else undoneArr.push({ name:m, o:o });
+  });
+
+  var hasDate = rows.some(function(r){ return !!r.date; });
+
+  // 类型筛选
+  var allTypes = [];
+  cfg.types.split('\n').map(clean).filter(Boolean).forEach(function(x){ if(allTypes.indexOf(x)<0) allTypes.push(x); });
+  doneArr.forEach(function(o){ o.todayTypes.forEach(function(x){ if(allTypes.indexOf(x)<0) allTypes.push(x); }); });
+
+  var shown = doneArr;
+  if (state.filter !== '全部'){
+    shown = doneArr.filter(function(o){ return o.todayTypes.indexOf(state.filter) >= 0; });
+  }
+
+  var total = members.length + extra.length;
+  var pct = total ? Math.round(doneArr.length / total * 100) : 0;
+
+  var h = '';
+
+  h += '<div class="hd">'
+     + '<p class="org">' + esc(cfg.org) + '</p>'
+     + '<p class="ttl">' + esc(cfg.title) + '</p>'
+     + '<p class="date">' + t.replace(/-/g,' / ') + '　' + ['星期日','星期一','星期二','星期三','星期四','星期五','星期六'][new Date().getDay()] + '</p>'
+     + '<a class="setup" href="#setup">设置</a>'
+     + '</div>';
+
+  h += '<div class="wrap">';
+
+  if (!cfg.dataUrl && !cfg.manual){
+    h += '<div class="demo-banner"><span>当前是示例数据，配好问卷星后替换</span><a href="#setup">去配置</a></div>';
+  }
+  if (data.warn){
+    h += '<div class="demo-banner"><span>' + esc(data.warn) + '</span><a href="#setup">设置</a></div>';
+  }
+  if (!data.ok){
+    h += '<div class="err" style="margin:14px 0 0">' + esc(data.err) + '　<a href="#setup" style="color:#A32D2D">去设置</a></div>';
+  }
+
+  // 进度
+  h += '<div class="card pad" style="margin-top:14px">'
+     + '<div class="prog-top"><span class="lbl">今日打卡</span>'
+     + '<span class="num"><b>' + doneArr.length + '</b>/ ' + total + ' 人</span></div>'
+     + '<div class="bar"><i style="width:' + pct + '%"></i></div>';
+  if (!hasDate && rows.length){
+    h += '<div class="hint">数据里没有日期字段，当前按「累计打卡」统计。想区分今天谁打了，在问卷里加一题日期，用计算公式填 CURRENT_DATE()。</div>';
+  } else {
+    h += '<div class="hint">打卡率 ' + pct + '%，共 ' + rows.length + ' 条记录</div>';
+  }
+  h += '</div>';
+
+  // 近 7 天
+  h += '<div class="card pad"><div class="prog-top"><span class="lbl">近 7 天打卡人数</span></div><div class="week">';
+  var maxv = 1;
+  var wk = [];
+  for (var i = 6; i >= 0; i--){
+    var d = daysAgo(i);
+    var n = 0;
+    Object.keys(map).forEach(function(k){ if (map[k].dates[d]) n++; });
+    wk.push({ d:d, n:n });
+    if (n > maxv) maxv = n;
+  }
+  wk.forEach(function(w){
+    var hh = Math.max(3, Math.round(w.n / maxv * 34));
+    var lbl = w.d === t ? '今' : ['日','一','二','三','四','五','六'][new Date(w.d.replace(/-/g,'/')).getDay()];
+    h += '<div class="d"><div class="b' + (w.n ? '' : ' zero') + '" style="height:' + hh + 'px"></div><div class="t">' + lbl + '</div></div>';
+  });
+  h += '</div></div>';
+
+  // 筛选
+  if (allTypes.length > 1){
+    h += '<div class="chips">';
+    var chips = ['全部'].concat(allTypes);
+    chips.forEach(function(c){
+      h += '<button class="chip' + (state.filter === c ? ' act' : '') + '" data-f="' + esc(c) + '">' + esc(c) + '</button>';
+    });
+    h += '</div>';
+  }
+
+  // 已打卡
+  h += '<div class="sec"><span>已打卡 · ' + shown.length + '</span>'
+     + (state.filter !== '全部' ? '<span>筛选：' + esc(state.filter) + '</span>' : '') + '</div>';
+  h += '<div class="card">';
+  if (!shown.length){
+    h += '<div class="center" style="padding:26px 10px">今天还没有人打卡</div>';
+  } else {
+    shown.forEach(function(o){
+      var ini = o.name.charAt(0);
+      var tg = '';
+      if (o.todayTypes.length){
+        tg = '<span class="tag y">' + esc(o.todayTypes.join(' · ')) + '</span>';
+      } else if (o.streak >= 3){
+        tg = '<span class="tag w">连续 ' + o.streak + ' 天</span>';
+      } else {
+        tg = '<span class="sub">累计 ' + o.total + ' 次</span>';
+      }
+      var extraTag = (o.streak >= 3 && o.todayTypes.length) ? ' <span class="tag w">连续' + o.streak + '</span>' : '';
+      h += '<div class="row"><div class="av on">' + esc(ini) + '</div>'
+         + '<div class="nm">' + esc(o.name) + (o.note ? '<div class="sub" style="white-space:normal;margin-top:2px">' + esc(o.note.slice(0,60)) + '</div>' : '') + '</div>'
+         + tg + extraTag + '</div>';
+    });
+    if (extra.length){
+      h += '<div class="row"><div class="av on">+</div><div class="nm" style="color:#8A8894">名单外：' + esc(extra.join('、')) + '</div></div>';
+    }
+  }
+  h += '</div>';
+
+  // 未打卡
+  if (undoneArr.length){
+    h += '<div class="sec"><span>未打卡 · ' + undoneArr.length + '</span></div>';
+    h += '<div class="card">';
+    undoneArr.forEach(function(u){
+      var s = u.o ? ('上次 ' + u.o.last) : '还没打过卡';
+      h += '<div class="row"><div class="av off">' + esc(u.name.charAt(0)) + '</div>'
+         + '<div class="nm off">' + esc(u.name) + '</div>'
+         + '<span class="sub">' + esc(s) + '</span></div>';
+    });
+    h += '</div>';
+  }
+
+  h += '</div>';
+
+  // 底部
+  h += '<div class="foot"><div class="in">';
+  if (cfg.surveyUrl){
+    h += '<a class="btn" href="' + esc(cfg.surveyUrl) + '">去打卡</a>';
+  } else {
+    h += '<a class="btn" href="#setup">配置问卷链接后才能打卡</a>';
+  }
+  h += '</div></div>';
+
+  return h;
+}
+
+/* ================= 渲染：设置页 ================= */
+function renderSetup(cfg){
+  var h = '<div class="st-wrap">';
+  h += '<h1 class="st-h">打卡设置</h1>';
+  h += '<p class="st-s">填一次，生成一条链接发群里，其他人打开就是配好的样子。</p>';
+
+  h += '<div class="st-card">'
+     + '<h3>基本</h3>'
+     + fld('组织名', '<input id="f_org" value="' + esc(cfg.org) + '">')
+     + fld('打卡标题', '<input id="f_title" value="' + esc(cfg.title) + '">')
+     + '</div>';
+
+  h += '<div class="st-card">'
+     + '<h3>问卷星</h3>'
+     + fld('问卷填写链接 <b>*</b>', '<input id="f_survey" placeholder="https://www.wjx.cn/vm/xxxx.aspx" value="' + esc(cfg.surveyUrl) + '">', '成员点「去打卡」就跳到这里')
+     + fld('公开数据地址', '<input id="f_data" placeholder="https://www.wjx.cn/....../data" value="' + esc(cfg.dataUrl) + '">', '问卷里：题目自动化 → API 数据查询 → 公开数据地址。留空则用下面的手动数据')
+     + fld('跨域代理前缀（可选）', '<input id="f_proxy" placeholder="留空，读取失败再填" value="' + esc(cfg.proxy) + '">', '若提示读取失败，填 https://api.allorigins.win/raw?url= 试试')
+     + '</div>';
+
+  h += '<div class="st-card">'
+     + '<h3>成员与项目</h3>'
+     + fld('成员名单 <b>*</b>', '<textarea id="f_members" placeholder="张三&#10;李四&#10;王五">' + esc(cfg.members) + '</textarea>', '一行一个。名单外的人打卡会单独标出')
+     + fld('打卡项目', '<textarea id="f_types" placeholder="读书&#10;学习经典一课">' + esc(cfg.types) + '</textarea>', '一行一个，和问卷里的选项保持一致')
+     + fld('手动数据（兜底）', '<textarea id="f_manual" placeholder="[{\"name\":\"张三\",\"type\":\"读书\",\"date\":\"2026-10-20\"}]">' + esc(cfg.manual) + '</textarea>', '接口不通时，从问卷星导出后粘到这里也能用')
+     + '</div>';
+
+  h += '<button class="btn" id="save">保存并生成分享链接</button>';
+  h += '<button class="btn ghost" id="back">返回打卡页</button>';
+  h += '<button class="btn ghost" id="reset">清空本地配置</button>';
+
+  h += '<div id="out"></div>';
+  h += '</div>';
+  return h;
+
+  function fld(label, ctl, tip){
+    return '<div class="fld"><label>' + label + '</label>' + ctl + (tip ? '<div class="tip">' + tip + '</div>' : '') + '</div>';
+  }
+}
+
+/* ================= 路由 ================= */
+var root = document.getElementById('root');
+
+function go(mode){
+  var cfg = loadCfg();
+
+  if (mode === 'setup'){
+    root.innerHTML = renderSetup(cfg);
+    bindSetup(cfg);
+    window.scrollTo(0,0);
+    return;
+  }
+
+  root.innerHTML = '<div class="center" style="padding:80px 20px"><div class="spin"></div>正在读取打卡数据</div>';
+  window.scrollTo(0,0);
+
+  var isDemo = !cfg.dataUrl && !cfg.manual;
+  if (isDemo){
+    var t = today(), y = daysAgo(1), y2 = daysAgo(2);
+    var demo = [
+      {name:'龚嘉琦', type:'读书', date:t, note:'读了 32 页'},
+      {name:'林知远', type:'学习经典一课', date:t},
+      {name:'周晏', type:'读书', date:t},
+      {name:'周晏', type:'读书', date:y},
+      {name:'周晏', type:'读书', date:y2},
+      {name:'许清和', type:'学习经典一课', date:y},
+      {name:'何雨桐', type:'读书', date:y2}
+    ];
+    setTimeout(function(){
+      root.innerHTML = renderHome(cfg, { ok:true, rows:demo, src:'demo' });
+      bindHome(cfg);
+    }, 400);
+    return;
+  }
+
+  fetchData(cfg, function(data){
+    root.innerHTML = renderHome(cfg, data);
+    bindHome(cfg);
+  });
+}
+
+function bindHome(cfg){
+  var chips = root.querySelectorAll('.chip');
+  Array.prototype.forEach.call(chips, function(b){
+    b.onclick = function(){
+      state.filter = b.getAttribute('data-f');
+      go('home');
+    };
+  });
+}
+
+function bindSetup(cfg){
+  var $ = function(id){ return document.getElementById(id); };
+
+  $('back').onclick = function(){ location.hash = ''; go('home'); };
+
+  $('reset').onclick = function(){
+    try{ localStorage.removeItem(LS_CFG); localStorage.removeItem(LS_JSON); }catch(e){}
+    location.hash = '';
+    location.reload();
+  };
+
+  $('save').onclick = function(){
+    var c = {
+      org:      $('f_org').value.trim() || '创造营',
+      title:    $('f_title').value.trim() || '每日打卡',
+      surveyUrl:$('f_survey').value.trim(),
+      dataUrl:  $('f_data').value.trim(),
+      proxy:    $('f_proxy').value.trim(),
+      members:  $('f_members').value.replace(/\r/g,''),
+      types:    $('f_types').value.replace(/\r/g,''),
+      manual:   $('f_manual').value.trim()
+    };
+    saveCfg(c);
+    try{ localStorage.setItem(LS_JSON, c.manual); }catch(e){}
+
+    var base = location.origin + location.pathname;
+    var share = base + '#c=' + encCfg(c);
+    var out = $('out');
+    var msg = '';
+
+    if (!c.surveyUrl) msg += '<div class="err">还没填问卷填写链接，「去打卡」按钮不可用。</div>';
+    if (!c.dataUrl && !c.manual) msg += '<div class="err">公开数据地址和手动数据都空着，页面会一直显示示例数据。</div>';
+
+    msg += '<div class="share">已保存。把下面这条链接发到群里，成员打开就是你配好的样子：'
+         + '<span class="u" id="su">' + esc(share) + '</span></div>';
+    msg += '<button class="btn" id="copy">复制分享链接</button>';
+    msg += '<button class="btn ghost" id="open">先自己打开看看</button>';
+
+    out.innerHTML = msg;
+
+    document.getElementById('copy').onclick = function(){
+      var btn = this;
+      copyText(share, function(ok){
+        btn.textContent = ok ? '已复制' : '复制失败，请手动长按选中';
+        setTimeout(function(){ btn.textContent = '复制分享链接'; }, 2000);
+      });
+    };
+    document.getElementById('open').onclick = function(){
+      location.hash = 'c=' + encCfg(c);
+      go('home');
+    };
+    out.scrollIntoView({ behavior:'smooth' });
+  };
+}
+
+function copyText(t, cb){
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ cb(true); }, function(){ fallback(); });
+  } else fallback();
+
+  function fallback(){
+    var ta = document.createElement('textarea');
+    ta.value = t;
+    ta.style.position = 'absolute';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try{ ok = document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta);
+    cb(ok);
+  }
+}
+
+function onHash(){
+  var m = (location.hash || '').match(/^#(setup)/);
+  go(m ? 'setup' : 'home');
+}
+
+if (typeof window !== 'undefined'){
+  window.__CC__ = {
+    normDate:normDate, fmtDate:fmtDate, today:today, daysAgo:daysAgo,
+    streak:streak, parseRows:parseRows, build:build, pick:pick, clean:clean,
+    encCfg:encCfg, decCfg:decCfg, loadCfg:loadCfg
+  };
+}
+
+window.addEventListener('hashchange', onHash);
+onHash();
+
+})();
+</script>
+</body>
+</html>
